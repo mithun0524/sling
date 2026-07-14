@@ -1,28 +1,117 @@
-# sling
+<p align="center">
+  <img src="assets/logo.svg" alt="sling" width="560">
+</p>
 
-Terminal cURL replay tool. Paste a browser "Copy as cURL", sling strips the junk
-headers, saves it by name, and lets you replay it — with swappable `{{vars}}`.
+<h3 align="center">Paste a browser cURL. Strip the junk. Save it. Sling it — forever.</h3>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/curl-sling"><img alt="npm" src="https://img.shields.io/npm/v/curl-sling?color=38bdf8&label=curl-sling&logo=npm"></a>
+  <img alt="node" src="https://img.shields.io/badge/node-%E2%89%A520-3c873a?logo=node.js&logoColor=white">
+  <img alt="deps" src="https://img.shields.io/badge/runtime%20deps-0-a78bfa">
+  <img alt="license" src="https://img.shields.io/badge/license-MIT-64748b">
+</p>
+
+---
+
+## The itch
+
+You open devtools, right-click a request, **Copy as cURL**. You paste a 22-header
+monster into your terminal to replay it. Then you do it again. And again — tweaking one
+ID in the JSON body each time.
+
+```
+curl 'https://api.example.com/tenant/abc/user/42' \
+  -H 'sec-ch-ua: "Chromium";v="120"' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'accept-language: en-US' \
+  -H 'priority: u=1' \
+  ... 18 more lines of noise ...
+  -H 'authorization: Bearer eyJ...' \
+  --data-raw '{"userId":"42"}'
+```
+
+Postman's a whole GUI. HTTPie/Hurl don't clean the browser paste. So you keep suffering.
+
+**`sling` is the fix.** It parses the paste, throws away the noise headers, keeps what
+matters, saves it by name, and lets you replay it with swappable `{{vars}}`.
 
 ## Install
 
-    npm install -g sling
+```bash
+npm install -g curl-sling      # command is `sling`
+```
 
-## Use
+## 30-second tour
 
-    # Save a request (paste the curl on stdin):
-    pbpaste | sling add my-req
-    # or
-    echo "curl 'https://api.example.com/u/{{id}}' -H 'authorization: Bearer x'" | sling add my-req
+```bash
+# 1. Save a request straight from your clipboard
+pbpaste | sling add get-user
 
-    sling ls                       # list saved
-    sling show my-req              # inspect
-    sling run my-req --var id=42   # replay, filling {{id}}
-    sling rm my-req                # delete
+#    → saved 'get-user' (GET https://api.example.com/tenant/{{tenant}}/user/{{id}})
+#      — vars: tenant, id
+#      (sec-ch-ua, sec-fetch-*, priority, accept-language … all stripped)
 
-Requests are stored in `~/.config/sling/requests.json`.
+# 2. Replay it — fill the vars, get a clean response
+sling run get-user --var tenant=abc --var id=42
 
-To parameterize a request, write `{{name}}` where you want a swappable value
-(in the URL, a header value, or the body) before saving. sling detects them and
-you fill them at run time with `--var name=value`.
+#    → 200  118ms
+#      {
+#        "id": "42",
+#        "name": "Ada"
+#      }
 
-Requires Node ≥ 20. Zero runtime dependencies.
+# 3. The rest
+sling ls              # list saved requests
+sling show get-user   # inspect one
+sling rm  get-user    # delete one
+```
+
+## The `{{var}}` trick
+
+Anywhere you want a swappable value — in the URL, a header, or the body — write
+`{{name}}` before you save:
+
+```bash
+echo "curl 'https://api.example.com/u/{{id}}' -H 'authorization: Bearer {{token}}'" \
+  | sling add whoami
+```
+
+`sling` detects them. At run time you fill each one:
+
+```bash
+sling run whoami --var id=42 --var token=abc123
+```
+
+Forget one? It refuses to fire and tells you which is missing — no half-baked requests:
+
+```
+missing vars: token. Pass with --var name=value.
+```
+
+## What gets stripped
+
+Kept: `authorization`, `content-type`, `cookie`, and everything else meaningful.
+Dropped (browser noise): `sec-ch-ua*`, `sec-fetch-*`, `priority`, `accept-language`,
+`accept-encoding`, `referer`, `dnt`, `cache-control`, `pragma`.
+
+## Where it lives
+
+Requests are stored as plain JSON at `~/.config/sling/requests.json`
+(honors `$XDG_CONFIG_HOME`). Readable, grep-able, git-able.
+
+## Under the hood
+
+Six tiny, single-purpose modules — `parser` · `cleaner` · `templater` · `store` ·
+`executor` · `cli`. Native `fetch`, `node:util.parseArgs`, `node:test`.
+**Zero runtime dependencies.** Node ≥ 20.
+
+```bash
+git clone https://github.com/mithun0524/sling
+cd sling && npm install
+npm test        # 19 tests
+npm run build
+```
+
+## License
+
+MIT © [mithun0524](https://github.com/mithun0524)
