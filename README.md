@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="sling" width="560">
+  <img src="assets/logo.png" alt="sling" width="560">
 </p>
 
 <h3 align="center">Paste a browser cURL. Strip the junk. Save it. Sling it — forever.</h3>
