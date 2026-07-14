@@ -1,14 +1,22 @@
 {
-  "name": "sling",
+  "name": "curl-sling",
   "version": "0.1.0",
-  "description": "Terminal cURL replay tool: paste a browser cURL, clean it, save it, replay it.",
+  "description": "Terminal cURL replay tool: paste a browser cURL, strip the junk headers, save it by name, replay it with swappable {{vars}}. Zero runtime deps.",
   "type": "module",
   "bin": { "sling": "./dist/cli.js" },
+  "files": ["dist", "README.md"],
   "engines": { "node": ">=20" },
+  "keywords": ["curl", "http", "cli", "rest", "api", "request", "replay", "devtools", "postman", "httpie"],
+  "author": "mithun0524",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/mithun0524/sling.git" },
+  "homepage": "https://github.com/mithun0524/sling#readme",
+  "bugs": { "url": "https://github.com/mithun0524/sling/issues" },
   "scripts": {
     "build": "tsc",
     "test": "tsx --test test/*.test.ts",
-    "start": "tsx src/cli.ts"
+    "start": "tsx src/cli.ts",
+    "prepublishOnly": "npm test && npm run build"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
