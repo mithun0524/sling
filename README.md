@@ -44,8 +44,8 @@ npm install -g curl-sling      # command is `sling`
 ## 30-second tour
 
 ```bash
-# 1. Save a request straight from your clipboard
-pbpaste | sling add get-user
+# 1. Copy a request in devtools (Copy as cURL), then just:
+sling add get-user            # reads your clipboard — no pipe needed
 
 #    → saved 'get-user' (GET https://api.example.com/tenant/{{tenant}}/user/{{id}})
 #      — vars: tenant, id
@@ -59,8 +59,10 @@ sling run get-user --var tenant=abc --var id=42
 #        "id": "42",
 #        "name": "Ada"
 #      }
+#    forget a --var? it prompts you for it instead of failing.
 
 # 3. The rest
+sling edit get-user   # tweak it in $EDITOR
 sling ls              # list saved requests
 sling show get-user   # inspect one
 sling rm  get-user    # delete one
@@ -82,11 +84,28 @@ echo "curl 'https://api.example.com/u/{{id}}' -H 'authorization: Bearer {{token}
 sling run whoami --var id=42 --var token=abc123
 ```
 
-Forget one? It refuses to fire and tells you which is missing — no half-baked requests:
+Forget one? On an interactive terminal it **prompts** you for it. In a script
+(piped, non-interactive) it refuses to fire and tells you which is missing — no
+half-baked requests:
 
 ```
-missing vars: token. Pass with --var name=value.
+missing: token. Pass vars with --var name=value.
 ```
+
+### Secrets stay out of the store
+
+For tokens and keys, use `{{env:NAME}}` — resolved from your environment at run
+time, **never written to disk**:
+
+```bash
+echo "curl 'https://api.example.com/me' -H 'authorization: Bearer {{env:API_TOKEN}}'" \
+  | sling add me
+
+API_TOKEN=sk-live-… sling run me     # token pulled from env, never stored
+```
+
+The saved request keeps the literal `Bearer {{env:API_TOKEN}}` — your secret
+never touches `requests.json`.
 
 ## What gets stripped
 

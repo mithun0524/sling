@@ -1,6 +1,6 @@
 {
   "name": "curl-sling",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Terminal cURL replay tool: paste a browser cURL, strip the junk headers, save it by name, replay it with swappable {{vars}}. Zero runtime deps.",
   "type": "module",
   "bin": { "sling": "./dist/cli.js" },

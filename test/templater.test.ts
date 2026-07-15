@@ -27,3 +27,27 @@ test("substitute with all vars leaves no missing", () => {
   assert.equal(out.url, "1");
   assert.deepEqual(out.missing, []);
 });
+
+test("substitute resolves {{env:NAME}} from the env map", () => {
+  const out = substitute(
+    { url: "https://x.com", headers: { authorization: "Bearer {{env:TOKEN}}" }, body: null },
+    {},
+    { TOKEN: "abc" },
+  );
+  assert.equal(out.headers.authorization, "Bearer abc");
+  assert.deepEqual(out.missing, []);
+});
+
+test("substitute reports missing env var with env: prefix", () => {
+  const out = substitute(
+    { url: "https://x.com", headers: { authorization: "Bearer {{env:TOKEN}}" }, body: null },
+    {},
+    {},
+  );
+  assert.deepEqual(out.missing, ["env:TOKEN"]);
+});
+
+test("detectVars ignores {{env:NAME}} forms", () => {
+  const vars = detectVars({ url: "https://x.com/{{id}}", headers: { authorization: "Bearer {{env:TOKEN}}" }, body: null });
+  assert.deepEqual(vars, ["id"]);
+});
